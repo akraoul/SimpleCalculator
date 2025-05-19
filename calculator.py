@@ -1,16 +1,15 @@
 import sys
 import math
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QGridLayout,
-                             QPushButton, QLineEdit, QVBoxLayout)
+                             QPushButton, QLineEdit, QVBoxLayout, QTextEdit)
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QIcon
-
 
 class Calculator(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Calculatrice Scientifique")
-        self.setFixedSize(450, 600)
+        self.setFixedSize(450, 700)  # Ajusté pour inclure l'historique
 
         # Style global
         self.setStyleSheet("""
@@ -23,6 +22,14 @@ class Calculator(QMainWindow):
                 border-radius: 8px;
                 padding: 10px;
                 font-size: 24px;
+                color: #2d3436;
+            }
+            QTextEdit {
+                background-color: white;
+                border: 1px solid #dcdcdc;
+                border-radius: 8px;
+                padding: 10px;
+                font-size: 14px;
                 color: #2d3436;
             }
             QPushButton {
@@ -80,6 +87,14 @@ class Calculator(QMainWindow):
         self.display.setFont(QFont("Arial", 24))
         self.layout.addWidget(self.display)
 
+        # Zone d'historique
+        self.history_display = QTextEdit()
+        self.history_display.setFixedHeight(150)
+        self.history_display.setReadOnly(True)
+        self.history_display.setFont(QFont("Arial", 14))
+        self.history_display.setHtml("<b>Historique :</b><br>")
+        self.layout.addWidget(self.history_display)
+
         # Grille des boutons
         self.button_grid = QGridLayout()
         self.button_grid.setSpacing(8)
@@ -121,6 +136,7 @@ class Calculator(QMainWindow):
         # Variables de calcul
         self.current_expression = ""
         self.result_shown = False
+        self.history = []
 
     def button_clicked(self):
         button = self.sender()
@@ -132,6 +148,8 @@ class Calculator(QMainWindow):
         if key == 'C':
             self.current_expression = ""
             self.display.setText("")
+            self.history = []
+            self.history_display.setHtml("<b>Historique :</b><br>")
 
         elif key == '=':
             try:
@@ -143,8 +161,11 @@ class Calculator(QMainWindow):
                 expr = expr.replace('√', 'math.sqrt')
 
                 result = eval(expr, {"math": math, "__builtins__": {}})
-                self.display.setText(str(round(result, 8)))
-                self.current_expression = str(result)
+                result_str = str(round(result, 8))
+                self.history.append(f"{self.current_expression} = {result_str}")
+                self.history_display.setHtml("<b>Historique :</b><br>" + "<br>".join(self.history[-5:]))
+                self.display.setText(result_str)
+                self.current_expression = result_str
                 self.result_shown = True
             except Exception:
                 self.display.setText("Erreur")
@@ -158,7 +179,6 @@ class Calculator(QMainWindow):
             self.current_expression += key
             display_text = self.current_expression.replace('*', '×').replace('-', '−')
             self.display.setText(display_text)
-
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
